@@ -1,0 +1,64 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pmarket}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pmarket}
+      POSTGRES_DB: ${POSTGRES_DB:-pmarket}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pmarket}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  indexer:
+    build:
+      context: ./services/indexer
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-pmarket}:${POSTGRES_PASSWORD:-pmarket}@postgres:5432/${POSTGRES_DB:-pmarket}?schema=public
+      SOLANA_RPC_URL: ${SOLANA_RPC_URL:-https://api.devnet.solana.com}
+      PROGRAM_ID: ${PROGRAM_ID:-Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS}
+      POLL_INTERVAL_MS: ${POLL_INTERVAL_MS:-5000}
+      IPFS_GATEWAY: ${IPFS_GATEWAY:-https://gateway.pinata.cloud/ipfs/}
+
+  api:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-3001}:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-pmarket}:${POSTGRES_PASSWORD:-pmarket}@postgres:5432/${POSTGRES_DB:-pmarket}?schema=public
+      API_PORT: 3001
+      LLM_JUDGE_URL: http://llm-judge:3002
+
+  llm-judge:
+    build:
+      context: ./services/llm-judge
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${LLM_JUDGE_PORT:-3002}:3002"
+    environment:
+      LLM_JUDGE_PORT: 3002
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-pmarket}:${POSTGRES_PASSWORD:-pmarket}@postgres:5432/${POSTGRES_DB:-pmarket}?schema=public
+
+volumes:
+  pgdata:

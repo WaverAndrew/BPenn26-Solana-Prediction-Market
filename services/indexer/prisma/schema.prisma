@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Market {
+  id                Int       @id
+  creator           String
+  claimUri          String    @map("claim_uri")
+  category          String
+  expiry            DateTime
+  state             Int
+  outcome           Int
+  yesPool           BigInt    @map("yes_pool")
+  noPool            BigInt    @map("no_pool")
+  evidenceCount     Int       @map("evidence_count")
+  resolutionBundle  Int       @map("resolution_bundle")
+  metadataUri       String    @map("metadata_uri")
+  createdAt         DateTime  @map("created_at")
+
+  evidence          Evidence[]
+  positions         Position[]
+  evidenceStakes    EvidenceStake[]
+  resolution        ResolutionBundle?
+
+  @@map("markets")
+}
+
+model Evidence {
+  id               Int
+  marketId         Int       @map("market_id")
+  parentEvidenceId Int?      @map("parent_evidence_id")
+  author           String
+  side             Int
+  contentUri       String    @map("content_uri")
+  contentHash      String    @map("content_hash")
+  bondAmount       BigInt    @map("bond_amount")
+  includedPool     BigInt    @map("included_pool")
+  notIncludedPool  BigInt    @map("not_included_pool")
+  supportCount     Int       @map("support_count")
+  challengeCount   Int       @map("challenge_count")
+  status           Int
+  createdAt        DateTime  @map("created_at")
+
+  market           Market    @relation(fields: [marketId], references: [id])
+  stakes           EvidenceStake[]
+
+  @@unique([marketId, id])
+  @@map("evidence")
+}
+
+model Position {
+  marketId   Int     @map("market_id")
+  user       String
+  yesAmount  BigInt  @map("yes_amount")
+  noAmount   BigInt  @map("no_amount")
+  claimed    Boolean
+
+  market     Market  @relation(fields: [marketId], references: [id])
+
+  @@unique([marketId, user])
+  @@map("positions")
+}
+
+model EvidenceStake {
+  marketId          Int     @map("market_id")
+  evidenceId        Int     @map("evidence_id")
+  user              String
+  includedAmount    BigInt  @map("included_amount")
+  notIncludedAmount BigInt  @map("not_included_amount")
+  claimed           Boolean
+
+  market            Market   @relation(fields: [marketId], references: [id])
+  evidence          Evidence @relation(fields: [marketId, evidenceId], references: [marketId, id])
+
+  @@unique([marketId, evidenceId, user])
+  @@map("evidence_stakes")
+}
+
+model UserProfile {
+  authority         String   @id
+  forecastKarma     BigInt   @map("forecast_karma")
+  evidenceKarma     BigInt   @map("evidence_karma")
+  reviewerKarma     BigInt   @map("reviewer_karma")
+  challengeKarma    BigInt   @map("challenge_karma")
+  penalties         Int
+  marketsCreated    Int      @map("markets_created")
+  betsPlaced        Int      @map("bets_placed")
+  evidenceSubmitted Int      @map("evidence_submitted")
+  createdAt         DateTime @map("created_at")
+
+  @@map("user_profiles")
+}
+
+model ResolutionBundle {
+  marketId           Int      @id @map("market_id")
+  outcome            Int
+  includedEvidenceIds Json    @map("included_evidence_ids")
+  resolver           String
+  rationaleUri       String   @map("rationale_uri")
+  resolvedAt         DateTime @map("resolved_at")
+  disputed           Boolean
+
+  market             Market   @relation(fields: [marketId], references: [id])
+
+  @@map("resolution_bundles")
+}
+
+model IndexerState {
+  key   String @id
+  value String
+
+  @@map("indexer_state")
+}

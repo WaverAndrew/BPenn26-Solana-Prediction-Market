@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.next/
+target/
+.anchor/
+.env
+*.log
+.DS_Store
+.vercel
+test-ledger/

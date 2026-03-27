@@ -1,0 +1,25 @@
+{
+  "name": "llm-judge",
+  "version": "1.0.0",
+  "description": "LLM Judge service for Solana prediction market",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node-fetch": "^2.6.12",
+    "typescript": "^5.7.0",
+    "ts-node-dev": "^2.0.0"
+  }
+}
