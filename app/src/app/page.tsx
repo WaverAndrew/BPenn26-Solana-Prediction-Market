@@ -50,7 +50,7 @@ const CATEGORIES = [
     orb1: "bg-orange-500",
     orb2: "bg-amber-400",
     accent: "#f97316",
-    videoKeyword: "crypto",
+    videoKeyword: "solana",
   },
   {
     label: "Entertainment",
@@ -68,7 +68,7 @@ const CATEGORIES = [
     orb1: "bg-purple-500",
     orb2: "bg-violet-400",
     accent: "#8b5cf6",
-    videoKeyword: "science",
+    videoKeyword: "gpt",
   },
   {
     label: "Other",
@@ -184,6 +184,9 @@ function MarketCard({ market, active }: CardProps) {
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [videoAttempt, setVideoAttempt] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [hearts, setHearts] = useState<{ id: number; x: number; y: number }[]>([]);
+  const heartIdRef = useRef(0);
 
   const videoCandidates = useMemo(() => {
     const paths = (stem: string) => [
@@ -271,6 +274,16 @@ function MarketCard({ market, active }: CardProps) {
     <div className="relative flex h-full w-full flex-shrink-0 flex-col overflow-hidden">
       {/* ── Top: video stage (full height, or ~40% when discussion is open — TikTok-style) ── */}
       <div
+        ref={stageRef}
+        onDoubleClick={(e) => {
+          const rect = stageRef.current?.getBoundingClientRect();
+          if (rect) {
+            const id = ++heartIdRef.current;
+            setHearts((h) => [...h, { id, x: e.clientX - rect.left, y: e.clientY - rect.top }]);
+            setTimeout(() => setHearts((h) => h.filter((v) => v.id !== id)), 950);
+          }
+          handleBet("yes");
+        }}
         className={`relative z-0 min-h-0 overflow-hidden transition-[height,flex-grow] duration-300 ease-out ${
           commentsOpen
             ? "h-[38%] max-h-[min(320px,48vh)] min-h-[154px] flex-shrink-0"
@@ -307,6 +320,17 @@ function MarketCard({ market, active }: CardProps) {
             />
           </div>
         )}
+
+        {/* Double-tap hearts */}
+        {hearts.map((h) => (
+          <span
+            key={h.id}
+            className="heart-burst text-5xl"
+            style={{ left: h.x, top: h.y }}
+          >
+            💚
+          </span>
+        ))}
 
         {/* Dark vignette overlay for readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40" />

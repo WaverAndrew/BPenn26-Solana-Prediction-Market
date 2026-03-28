@@ -24,8 +24,8 @@ export const DEMO_MARKETS: MarketData[] = [
   {
     id: 1001,
     creator: WALLET_B,
-    claimUri: "Will Bitcoin break $200k by December 2025?",
-    claimText: "Will Bitcoin break $200k by December 2025?",
+    claimUri: "Will Solana overtake $200B market cap by end of 2025?",
+    claimText: "Will Solana overtake $200B market cap by end of 2025?",
     category: 2,
     expiry: Date.now() / 1000 + 86400 * 30,
     state: "Open",
@@ -104,19 +104,19 @@ export const DEMO_EVIDENCE: Record<number, EvidenceData[]> = {
   1001: [
     {
       id: 0, marketId: 1001, parentEvidenceId: null, author: WALLET_B, side: "Yes",
-      contentText: "BlackRock IBIT crossed $18B AUM in 6 months — structural institutional demand at scale never seen before.",
+      contentText: "Solana DeFi TVL hit $12B and Firedancer is live — institutional-grade throughput at consumer cost. $200B is inevitable.",
       contentUri: "", bondAmount: 50_000_000, includedPool: 12_000_000_000, notIncludedPool: 4_000_000_000,
       supportCount: 18, challengeCount: 3, status: "Active", createdAt: Date.now() / 1000 - 86400 * 2,
     },
     {
       id: 1, marketId: 1001, parentEvidenceId: 0, author: WALLET_C, side: "No",
-      contentText: "ETF flows are mostly basis-trade arbitrage, not directional longs. Real demand is overstated.",
+      contentText: "SOL already ran 10x from the FTX bottom. Most of the move is speculative memecoin volume, not sticky TVL.",
       contentUri: "", bondAmount: 30_000_000, includedPool: 7_000_000_000, notIncludedPool: 9_000_000_000,
       supportCount: 9, challengeCount: 7, status: "Challenged", createdAt: Date.now() / 1000 - 86400,
     },
     {
       id: 2, marketId: 1001, parentEvidenceId: null, author: WALLET_D, side: "No",
-      contentText: "Every previous Bitcoin halving cycle topped out within 18 months. The peak was likely already in around $108k.",
+      contentText: "$200B market cap requires SOL above ~$450. That's a 3x from current levels in a tightening macro environment.",
       contentUri: "", bondAmount: 60_000_000, includedPool: 5_000_000_000, notIncludedPool: 11_000_000_000,
       supportCount: 11, challengeCount: 12, status: "Challenged", createdAt: Date.now() / 1000 - 86400 * 1.5,
     },
