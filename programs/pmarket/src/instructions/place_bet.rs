@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_lang::system_program;
-use crate::state::{Config, Market, MarketState, Outcome, Position};
+use crate::state::{Config, Market, MarketState, Position};
 use crate::errors::PmarketError;
 
 #[derive(Accounts)]
@@ -66,8 +66,8 @@ pub fn handler(ctx: Context<PlaceBet>, outcome: u8, amount: u64) -> Result<()> {
     let market = &mut ctx.accounts.market;
     let position = &mut ctx.accounts.position;
 
-    // Initialize position fields if new
-    if position.bump == 0 {
+    // Initialize position fields if newly created (user is default pubkey)
+    if position.user == Pubkey::default() {
         position.market_id = market.id;
         position.user = ctx.accounts.bettor.key();
         position.yes_amount = 0;

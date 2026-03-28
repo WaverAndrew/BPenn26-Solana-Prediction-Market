@@ -1,12 +1,13 @@
 [features]
 seeds = false
 skip-lint = false
+anchor-version = "0.31.1"
 
 [programs.localnet]
-pmarket = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+pmarket = "FKW68DSiFayFBepk5WoZb19CXNELiqjQy1yTndvwF2y8"
 
 [programs.devnet]
-pmarket = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+pmarket = "FKW68DSiFayFBepk5WoZb19CXNELiqjQy1yTndvwF2y8"
 
 [registry]
 url = "https://api.apr.dev"

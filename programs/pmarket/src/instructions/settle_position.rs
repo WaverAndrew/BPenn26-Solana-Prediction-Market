@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_lang::system_program;
 use crate::state::{Config, Market, MarketState, Outcome, Position};
 use crate::errors::PmarketError;
 
@@ -19,21 +20,13 @@ pub struct SettlePosition<'info> {
     )]
     pub market: Account<'info, Market>,
 
-    /// CHECK: Market vault PDA
+    /// CHECK: Market vault PDA — signs via seeds for CPI transfer out
     #[account(
         mut,
         seeds = [b"vault", market.id.to_le_bytes().as_ref()],
         bump = market.vault_bump,
     )]
     pub market_vault: UncheckedAccount<'info>,
-
-    /// CHECK: Treasury PDA for fee collection
-    #[account(
-        mut,
-        seeds = [b"treasury"],
-        bump,
-    )]
-    pub treasury: UncheckedAccount<'info>,
 
     #[account(
         mut,
@@ -64,7 +57,7 @@ pub fn handler(ctx: Context<SettlePosition>) -> Result<()> {
         Outcome::Yes => (position.yes_amount, market.yes_pool),
         Outcome::No => (position.no_amount, market.no_pool),
         Outcome::Invalid => {
-            // Refund: return proportional share
+            // Refund: return proportional share of total
             let user_total = position
                 .yes_amount
                 .checked_add(position.no_amount)
@@ -77,13 +70,12 @@ pub fn handler(ctx: Context<SettlePosition>) -> Result<()> {
     require!(user_winning_amount > 0, PmarketError::NoWinningPosition);
 
     let payout = if winning_pool == 0 {
-        // Edge case: no one on the winning side — refund everyone
+        // Zero winning pool edge case: full refund
         position
             .yes_amount
             .checked_add(position.no_amount)
             .ok_or(PmarketError::ArithmeticOverflow)?
     } else {
-        // Calculate fee
         let fee_bps = ctx.accounts.config.fee_bps as u128;
         let total_128 = total_pool as u128;
         let fee = total_128
@@ -101,33 +93,26 @@ pub fn handler(ctx: Context<SettlePosition>) -> Result<()> {
             .checked_div(winning_pool as u128)
             .ok_or(PmarketError::ArithmeticOverflow)?;
 
-        // Transfer fee to treasury
-        let fee_per_user = fee
-            .checked_mul(user_winning_amount as u128)
-            .ok_or(PmarketError::ArithmeticOverflow)?
-            .checked_div(winning_pool as u128)
-            .ok_or(PmarketError::ArithmeticOverflow)? as u64;
-
-        if fee_per_user > 0 {
-            let market_id_bytes = market.id.to_le_bytes();
-            let vault_seeds: &[&[u8]] = &[
-                b"vault",
-                market_id_bytes.as_ref(),
-                &[market.vault_bump],
-            ];
-            let signer_seeds = &[vault_seeds];
-
-            **ctx.accounts.market_vault.to_account_info().try_borrow_mut_lamports()? -= fee_per_user;
-            **ctx.accounts.treasury.to_account_info().try_borrow_mut_lamports()? += fee_per_user;
-        }
-
         payout_128 as u64
     };
 
-    // Transfer payout from vault to user
+    // Transfer payout from vault to user via CPI — vault PDA signs with seeds
     if payout > 0 {
-        **ctx.accounts.market_vault.to_account_info().try_borrow_mut_lamports()? -= payout;
-        **ctx.accounts.user.to_account_info().try_borrow_mut_lamports()? += payout;
+        let market_id_bytes = ctx.accounts.market.id.to_le_bytes();
+        let vault_bump = ctx.accounts.market.vault_bump;
+        let vault_seeds: &[&[u8]] = &[b"vault", market_id_bytes.as_ref(), &[vault_bump]];
+
+        system_program::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.system_program.to_account_info(),
+                system_program::Transfer {
+                    from: ctx.accounts.market_vault.to_account_info(),
+                    to: ctx.accounts.user.to_account_info(),
+                },
+                &[vault_seeds],
+            ),
+            payout,
+        )?;
     }
 
     let position = &mut ctx.accounts.position;

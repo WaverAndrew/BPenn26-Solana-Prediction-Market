@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_lang::system_program;
 use crate::state::{Config, Market, Evidence, EvidenceStatus};
 use crate::errors::PmarketError;
 
@@ -31,7 +32,7 @@ pub struct SlashBond<'info> {
     )]
     pub evidence: Account<'info, Evidence>,
 
-    /// CHECK: Evidence vault PDA
+    /// CHECK: Evidence vault PDA — signs via seeds for CPI transfer
     #[account(
         mut,
         seeds = [
@@ -63,10 +64,28 @@ pub fn handler(ctx: Context<SlashBond>) -> Result<()> {
 
     let bond = evidence.bond_amount;
 
-    // Transfer bond from evidence vault to treasury
     if bond > 0 {
-        **ctx.accounts.evidence_vault.to_account_info().try_borrow_mut_lamports()? -= bond;
-        **ctx.accounts.treasury.to_account_info().try_borrow_mut_lamports()? += bond;
+        let market_id_bytes = ctx.accounts.market.id.to_le_bytes();
+        let evidence_id_bytes = ctx.accounts.evidence.id.to_le_bytes();
+        let vault_bump = ctx.accounts.evidence.vault_bump;
+        let vault_seeds: &[&[u8]] = &[
+            b"evidence_vault",
+            market_id_bytes.as_ref(),
+            evidence_id_bytes.as_ref(),
+            &[vault_bump],
+        ];
+
+        system_program::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.system_program.to_account_info(),
+                system_program::Transfer {
+                    from: ctx.accounts.evidence_vault.to_account_info(),
+                    to: ctx.accounts.treasury.to_account_info(),
+                },
+                &[vault_seeds],
+            ),
+            bond,
+        )?;
     }
 
     let evidence = &mut ctx.accounts.evidence;

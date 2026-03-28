@@ -6,7 +6,7 @@ pub mod state;
 
 use instructions::*;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("FKW68DSiFayFBepk5WoZb19CXNELiqjQy1yTndvwF2y8");
 
 #[program]
 pub mod pmarket {

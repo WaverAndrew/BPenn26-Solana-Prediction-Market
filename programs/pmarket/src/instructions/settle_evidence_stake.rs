@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
-use crate::state::{Config, Market, MarketState, Evidence, EvidenceStatus, EvidenceStake, ResolutionBundle};
+use anchor_lang::system_program;
+use crate::state::{Config, Market, MarketState, Evidence, EvidenceStake, ResolutionBundle};
 use crate::errors::PmarketError;
 
 #[derive(Accounts)]
@@ -29,7 +30,7 @@ pub struct SettleEvidenceStake<'info> {
     )]
     pub evidence: Account<'info, Evidence>,
 
-    /// CHECK: Evidence vault PDA
+    /// CHECK: Evidence vault PDA — signs via seeds for CPI transfer out
     #[account(
         mut,
         seeds = [
@@ -75,10 +76,7 @@ pub fn handler(ctx: Context<SettleEvidenceStake>) -> Result<()> {
     let evidence = &ctx.accounts.evidence;
     let bundle = &ctx.accounts.resolution_bundle;
 
-    // Determine if evidence was included
-    let is_included = bundle
-        .included_evidence_ids
-        .contains(&evidence.id);
+    let is_included = bundle.included_evidence_ids.contains(&evidence.id);
 
     let total_pool = evidence
         .included_pool
@@ -94,7 +92,6 @@ pub fn handler(ctx: Context<SettleEvidenceStake>) -> Result<()> {
     require!(user_winning_amount > 0, PmarketError::NoWinningPosition);
 
     let payout = if winning_pool == 0 {
-        // Refund
         stake
             .included_amount
             .checked_add(stake.not_included_amount)
@@ -109,10 +106,29 @@ pub fn handler(ctx: Context<SettleEvidenceStake>) -> Result<()> {
         payout_128 as u64
     };
 
-    // Transfer payout from evidence vault to user
+    // Transfer payout from evidence vault to user via CPI
     if payout > 0 {
-        **ctx.accounts.evidence_vault.to_account_info().try_borrow_mut_lamports()? -= payout;
-        **ctx.accounts.user.to_account_info().try_borrow_mut_lamports()? += payout;
+        let market_id_bytes = ctx.accounts.market.id.to_le_bytes();
+        let evidence_id_bytes = ctx.accounts.evidence.id.to_le_bytes();
+        let vault_bump = ctx.accounts.evidence.vault_bump;
+        let vault_seeds: &[&[u8]] = &[
+            b"evidence_vault",
+            market_id_bytes.as_ref(),
+            evidence_id_bytes.as_ref(),
+            &[vault_bump],
+        ];
+
+        system_program::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.system_program.to_account_info(),
+                system_program::Transfer {
+                    from: ctx.accounts.evidence_vault.to_account_info(),
+                    to: ctx.accounts.user.to_account_info(),
+                },
+                &[vault_seeds],
+            ),
+            payout,
+        )?;
     }
 
     let stake = &mut ctx.accounts.evidence_stake;

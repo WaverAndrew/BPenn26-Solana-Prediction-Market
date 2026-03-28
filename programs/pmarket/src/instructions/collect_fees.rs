@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_lang::system_program;
 use crate::state::Config;
 use crate::errors::PmarketError;
 
@@ -21,7 +22,7 @@ pub struct CollectFees<'info> {
     )]
     pub fee_recipient: UncheckedAccount<'info>,
 
-    /// CHECK: Treasury PDA
+    /// CHECK: Treasury PDA — signs via seeds for CPI transfer out
     #[account(
         mut,
         seeds = [b"treasury"],
@@ -36,12 +37,24 @@ pub fn handler(ctx: Context<CollectFees>) -> Result<()> {
     let treasury_lamports = ctx.accounts.treasury.lamports();
     let rent = Rent::get()?;
     let min_balance = rent.minimum_balance(0);
-
     let drainable = treasury_lamports.saturating_sub(min_balance);
+
     require!(drainable > 0, PmarketError::InsufficientFunds);
 
-    **ctx.accounts.treasury.to_account_info().try_borrow_mut_lamports()? -= drainable;
-    **ctx.accounts.fee_recipient.to_account_info().try_borrow_mut_lamports()? += drainable;
+    let treasury_bump = ctx.bumps.treasury;
+    let treasury_seeds: &[&[u8]] = &[b"treasury", &[treasury_bump]];
+
+    system_program::transfer(
+        CpiContext::new_with_signer(
+            ctx.accounts.system_program.to_account_info(),
+            system_program::Transfer {
+                from: ctx.accounts.treasury.to_account_info(),
+                to: ctx.accounts.fee_recipient.to_account_info(),
+            },
+            &[treasury_seeds],
+        ),
+        drainable,
+    )?;
 
     msg!("Collected {} lamports in fees", drainable);
     Ok(())

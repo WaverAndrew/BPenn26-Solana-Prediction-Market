@@ -12,10 +12,6 @@ describe("04 - Resolve & Settle", () => {
     [Buffer.from("config")],
     program.programId
   );
-  const [treasuryPda] = anchor.web3.PublicKey.findProgramAddressSync(
-    [Buffer.from("treasury")],
-    program.programId
-  );
 
   const marketIdBytes = Buffer.alloc(8);
   marketIdBytes.writeBigUInt64LE(BigInt("0"));
@@ -88,7 +84,6 @@ describe("04 - Resolve & Settle", () => {
         config: configPda,
         market: marketPda,
         marketVault: vaultPda,
-        treasury: treasuryPda,
         position: positionPda,
         systemProgram: anchor.web3.SystemProgram.programId,
       })
@@ -118,7 +113,6 @@ describe("04 - Resolve & Settle", () => {
           config: configPda,
           market: marketPda,
           marketVault: vaultPda,
-          treasury: treasuryPda,
           position: positionPda,
           systemProgram: anchor.web3.SystemProgram.programId,
         })

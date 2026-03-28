@@ -91,8 +91,8 @@ pub fn handler(ctx: Context<StakeEvidence>, side: u8, amount: u64) -> Result<()>
     let evidence = &mut ctx.accounts.evidence;
     let stake = &mut ctx.accounts.evidence_stake;
 
-    // Initialize if new
-    if stake.bump == 0 {
+    // Initialize if newly created
+    if stake.user == Pubkey::default() {
         stake.market_id = market.id;
         stake.evidence_id = evidence.id;
         stake.user = ctx.accounts.staker.key();
