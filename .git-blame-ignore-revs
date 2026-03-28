@@ -1,0 +1,2 @@
+# Optional: list full 40-char commit SHAs (one per line) to hide from `git blame`.
+# Lines starting with # are ignored.
