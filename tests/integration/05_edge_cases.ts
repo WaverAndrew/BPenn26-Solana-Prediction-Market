@@ -82,12 +82,16 @@ describe("05 - Edge Cases", () => {
       .rpc();
 
     // Try to resolve with a non-admin keypair
+    // Fund from the main wallet via system transfer (avoids devnet airdrop rate limits)
     const nonAdmin = anchor.web3.Keypair.generate();
-    const airdropSig = await provider.connection.requestAirdrop(
-      nonAdmin.publicKey,
-      1_000_000_000
+    const fundTx = new anchor.web3.Transaction().add(
+      anchor.web3.SystemProgram.transfer({
+        fromPubkey: provider.wallet.publicKey,
+        toPubkey: nonAdmin.publicKey,
+        lamports: 10_000_000,
+      })
     );
-    await provider.connection.confirmTransaction(airdropSig);
+    await provider.sendAndConfirm(fundTx);
 
     const [resolutionPda] = anchor.web3.PublicKey.findProgramAddressSync(
       [Buffer.from("resolution"), marketIdBytes],
