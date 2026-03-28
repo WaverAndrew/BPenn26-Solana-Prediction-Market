@@ -7,7 +7,7 @@ import { usersRouter } from "./routes/users";
 import { feedRouter } from "./routes/feed";
 import { adminRouter } from "./routes/admin";
 
-const API_PORT = parseInt(process.env.API_PORT ?? "3001", 10);
+const API_PORT = parseInt(process.env.API_PORT ?? "4000", 10);
 
 const app = express();
 

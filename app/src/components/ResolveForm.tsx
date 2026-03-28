@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useAnchorCompatibleWallet } from "@/hooks/useAnchorCompatibleWallet";
 import { SystemProgram } from "@solana/web3.js";
 import { getProgram } from "@/lib/program";
 import {
@@ -23,7 +24,7 @@ export default function ResolveForm({
   evidence,
   onResolved,
 }: ResolveFormProps) {
-  const wallet = useAnchorWallet();
+  const wallet = useAnchorCompatibleWallet();
   const { publicKey, connected } = useWallet();
   const [outcome, setOutcome] = useState<0 | 1 | 2>(0);
   const [includedIds, setIncludedIds] = useState<Set<number>>(new Set());

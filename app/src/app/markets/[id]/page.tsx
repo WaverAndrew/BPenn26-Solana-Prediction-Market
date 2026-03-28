@@ -27,12 +27,14 @@ export default function MarketDetailPage() {
 
   if (mLoading) {
     return (
+      <div className="page-content">
       <div className="space-y-6">
         <div className="card animate-pulse space-y-4">
           <div className="h-4 bg-bg-tertiary rounded w-24" />
           <div className="h-8 bg-bg-tertiary rounded w-3/4" />
           <div className="h-4 bg-bg-tertiary rounded w-1/2" />
         </div>
+      </div>
       </div>
     );
   }
@@ -53,6 +55,7 @@ export default function MarketDetailPage() {
   const volume = market.yesPool + market.noPool;
 
   return (
+    <div className="page-content">
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Main content */}
       <div className="lg:col-span-2 space-y-6">
@@ -98,7 +101,7 @@ export default function MarketDetailPage() {
               <div className="h-4 bg-bg-tertiary rounded w-3/4" />
             </div>
           ) : (
-            <EvidenceThread tree={tree} />
+            <EvidenceThread tree={tree} onStaked={refetchEvidence} />
           )}
         </div>
 
@@ -120,6 +123,7 @@ export default function MarketDetailPage() {
         <BetPanel market={market} onBetPlaced={handleUpdate} />
         <PositionSummary position={position} market={market} />
       </div>
+    </div>
     </div>
   );
 }

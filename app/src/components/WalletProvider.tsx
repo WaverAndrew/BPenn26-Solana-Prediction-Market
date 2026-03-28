@@ -10,8 +10,9 @@ import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
 
 import "@solana/wallet-adapter-react-ui/styles.css";
 
+/** Must match `getConnection()` in `lib/program.ts` so txs simulate on the same cluster. */
 const RPC_URL =
-  process.env.NEXT_PUBLIC_RPC_URL || "http://localhost:8899";
+  process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com";
 
 export default function WalletProvider({
   children,

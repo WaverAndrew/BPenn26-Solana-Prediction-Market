@@ -13,7 +13,7 @@ pmarket = "FKW68DSiFayFBepk5WoZb19CXNELiqjQy1yTndvwF2y8"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "Devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

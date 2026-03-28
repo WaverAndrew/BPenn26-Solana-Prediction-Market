@@ -44,6 +44,7 @@ export default function ProfilePage() {
   }
 
   return (
+    <div className="page-content">
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-text-primary">Profile</h1>
@@ -65,6 +66,7 @@ export default function ProfilePage() {
           <PositionHistory positions={positions} />
         </div>
       </div>
+    </div>
     </div>
   );
 }

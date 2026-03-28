@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useWallet, useAnchorWallet } from "@solana/wallet-adapter-react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useAnchorCompatibleWallet } from "@/hooks/useAnchorCompatibleWallet";
 import { SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import { getProgram } from "@/lib/program";
@@ -14,7 +15,7 @@ import {
 } from "@/lib/pda";
 
 export function useStakeEvidence() {
-  const wallet = useAnchorWallet();
+  const wallet = useAnchorCompatibleWallet();
   const { publicKey } = useWallet();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +29,13 @@ export function useStakeEvidence() {
       amountSol: number
     ) => {
       if (!wallet || !publicKey) {
-        setError("Wallet not connected");
+        const msg =
+          "Wallet not ready — unlock Phantom and try again, or reconnect.";
+        setError(msg);
+        console.warn("[useStakeEvidence]", msg, {
+          hasWallet: !!wallet,
+          hasPublicKey: !!publicKey,
+        });
         return null;
       }
 
@@ -68,7 +75,9 @@ export function useStakeEvidence() {
         setTxSig(sig);
         return sig;
       } catch (e: any) {
-        setError(e.message);
+        const msg = e?.message ?? String(e);
+        console.error("[useStakeEvidence] stake_evidence failed:", e);
+        setError(msg);
         return null;
       } finally {
         setLoading(false);

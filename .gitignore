@@ -8,3 +8,6 @@ target/
 .DS_Store
 .vercel
 test-ledger/
+
+# Raw exports exceed GitHub's 100 MB limit; use compressed .mp4 per app/public/videos/README.md
+app/public/videos/*.MOV

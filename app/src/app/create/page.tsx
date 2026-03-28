@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useAnchorCompatibleWallet } from "@/hooks/useAnchorCompatibleWallet";
 import { SystemProgram } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import { getProgram } from "@/lib/program";
@@ -13,7 +14,7 @@ import { getConnection } from "@/lib/program";
 
 export default function CreateMarketPage() {
   const router = useRouter();
-  const wallet = useAnchorWallet();
+  const wallet = useAnchorCompatibleWallet();
   const { publicKey, connected } = useWallet();
 
   const [claim, setClaim] = useState("");
@@ -87,6 +88,7 @@ export default function CreateMarketPage() {
     .slice(0, 16);
 
   return (
+    <div className="page-content">
     <div className="max-w-2xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-text-primary">Create Market</h1>
@@ -200,6 +202,7 @@ export default function CreateMarketPage() {
           <p className="text-accent-red text-sm break-all">{error}</p>
         )}
       </div>
+    </div>
     </div>
   );
 }

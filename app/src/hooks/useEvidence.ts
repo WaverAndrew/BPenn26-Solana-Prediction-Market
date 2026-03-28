@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { fetchEvidence, EvidenceData } from "@/lib/api";
+import { DEMO_EVIDENCE } from "@/lib/demo-data";
 
-/** Builds a tree from flat evidence list. */
 function buildTree(items: EvidenceData[]): EvidenceData[] {
   const map = new Map<number, EvidenceData>();
   const roots: EvidenceData[] = [];
@@ -42,8 +42,11 @@ export function useEvidence(marketId: number | undefined) {
       const data = await fetchEvidence(marketId);
       setEvidence(data);
       setTree(buildTree(data));
-    } catch (e: any) {
-      setError(e.message);
+    } catch {
+      // Fall back to demo data when API is offline
+      const demo = DEMO_EVIDENCE[marketId] ?? [];
+      setEvidence(demo);
+      setTree(buildTree(demo));
     } finally {
       setLoading(false);
     }

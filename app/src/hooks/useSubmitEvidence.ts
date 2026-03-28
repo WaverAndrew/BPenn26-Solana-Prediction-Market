@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useWallet, useAnchorWallet } from "@solana/wallet-adapter-react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useAnchorCompatibleWallet } from "@/hooks/useAnchorCompatibleWallet";
 import { SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import { getProgram } from "@/lib/program";
@@ -13,7 +14,7 @@ import {
 } from "@/lib/pda";
 
 export function useSubmitEvidence() {
-  const wallet = useAnchorWallet();
+  const wallet = useAnchorCompatibleWallet();
   const { publicKey } = useWallet();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { fetchMarket, MarketData } from "@/lib/api";
+import { DEMO_MARKETS } from "@/lib/demo-data";
 
 export function useMarket(id: number | undefined) {
   const [market, setMarket] = useState<MarketData | null>(null);
@@ -15,8 +16,11 @@ export function useMarket(id: number | undefined) {
     try {
       const data = await fetchMarket(id);
       setMarket(data);
-    } catch (e: any) {
-      setError(e.message);
+    } catch {
+      // Fall back to demo data when API is offline
+      const demo = DEMO_MARKETS.find((m) => m.id === id) ?? null;
+      setMarket(demo);
+      if (!demo) setError("Market not found");
     } finally {
       setLoading(false);
     }

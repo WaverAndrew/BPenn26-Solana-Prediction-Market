@@ -34,7 +34,7 @@ export default function SubmitEvidenceForm({
     const encoder = new TextEncoder();
     const hashBuffer = await crypto.subtle.digest(
       "SHA-256",
-      encoder.encode(content)
+      encoder.encode(content) as unknown as ArrayBuffer
     );
     const contentHash = Array.from(new Uint8Array(hashBuffer));
 
